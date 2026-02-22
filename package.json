@@ -1,0 +1,23 @@
+{
+  "name": "webscraperai",
+  "version": "1.0.0",
+  "description": "An AI-powered web scraping tool that intelligently extracts and processes data from websites.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "prisma": "^6.19.2"
+  },
+  "type": "module",
+  "dependencies": {
+    "@prisma/client": "^7.4.1",
+    "axios": "^1.13.5",
+    "cheerio": "^1.2.0",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1"
+  }
+}

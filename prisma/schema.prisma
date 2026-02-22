@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+}
+
+// 1. User Model
+model User {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  email            String    @unique
+  name             String?
+  // Relation: A user can track many products
+  trackedProducts  Product[] @relation(fields: [productIds], references: [id])
+  productIds       String[]  @db.ObjectId
+  createdAt        DateTime  @default(now())
+}
+
+// 2. Product Model
+model Product {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  url           String         @unique // Critical: Prevents duplicate scraping
+  title         String
+  image         String?
+  currentPrice  Float
+  lowestPrice   Float?
+  highestPrice  Float?
+  
+  // Relation: A product can be tracked by many users
+  users         User[]         @relation(fields: [userIds], references: [id])
+  userIds       String[]       @db.ObjectId
+  
+  // Relation: One product has many price points over time
+  priceHistory  PriceHistory[]
+  
+  lastScrapedAt DateTime       @default(now())
+}
+
+// 3. Price History Model (For the Graph)
+model PriceHistory {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  price     Float
+  timestamp DateTime @default(now())
+  
+  // Relation: Connects back to the Product
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String   @db.ObjectId
+}
+
+// 4. Provider Model (The Scraper Config)
+model Provider {
+  id            String  @id @default(auto()) @map("_id") @db.ObjectId
+  domain        String  @unique // e.g., "amazon.in"
+  priceSelector String
+  titleSelector String
+  imageSelector String?
+}
