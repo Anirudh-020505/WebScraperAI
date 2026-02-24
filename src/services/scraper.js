@@ -1,4 +1,4 @@
-
+// src/services/scraper.js
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
@@ -14,11 +14,10 @@ export const scrapeProduct = async (url) => {
     const $ = cheerio.load(html);
     let scrapedData = { title: '', price: 0, image: '', currency: 'INR' };
 
-
+    // Strategy A: JSON-LD
     $('script[type="application/ld+json"]').each((_, el) => {
       try {
         const json = JSON.parse($(el).html());
-        
         const product = json['@type'] === 'Product' ? json : json['@graph']?.find(item => item['@type'] === 'Product');
         
         if (product) {
@@ -30,20 +29,22 @@ export const scrapeProduct = async (url) => {
             scrapedData.currency = offer.priceCurrency || 'INR';
           }
         }
-      } catch (e)
-    });
+      } catch (e) {
+        // Skip malformed JSON
+      }
+    }); // <--- Line 34 usually fails here if this is missing
 
-    
+    // Strategy B: CSS Fallback
     if (!scrapedData.price) {
       scrapedData.title = scrapedData.title || $('#productTitle').text().trim();
-      const priceText = $('.a-price-whole').first().text().trim() || $('#priceblock_ourprice').text().trim();
+      const priceText = $('.a-price-whole').first().text().trim();
       scrapedData.price = parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0;
     }
 
     return scrapedData;
 
   } catch (error) {
-    console.error(`Scraping error for ${url}:`, error.message);
-    throw new Error('Failed to extract data from the target website.');
+    console.error(`Scraping error: ${error.message}`);
+    throw error;
   }
-}
+};
